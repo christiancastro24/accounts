@@ -37,7 +37,7 @@ const operation = () => {
         }
 
         else if(action === "Sacar") {
-            return;
+            withdraw();
 
         } else {
             console.log(chalk.bgBlue('Você encerrou sua sessão.'));
@@ -167,5 +167,52 @@ const depositCash = () => {
         })
     }).catch(err => {
         console.log(err)
+    })
+}
+
+
+const withdraw = () => {
+    inquirer.prompt([
+        {
+            name: "accountName",
+            message: "Qual nome da sua conta?",
+            type: "input"
+        },
+        {
+            name: "accountCash",
+            message: "Quanto você quer sacar?",
+            type: "input"
+        }
+    ]).then(res => {
+
+        const accountName = res.accountName
+        const accountCash = parseInt(res.accountCash)
+
+        if(!fs.existsSync(`./Accounts/${accountName}.txt`)) {
+            console.log(chalk.bgRedBright('A conta não existe'))
+        }
+
+        fs.readFile(`./Accounts/${accountName}.txt`, 'utf-8', (err, data) => {
+            if(err) {
+                console.log(chalk.bgRedBright('Erro ao acessar conta'))
+                return;
+            }
+
+            if(data < accountCash) {
+                console.log(chalk.bgRedBright('O valor é maior que o solicitado'))
+                operation();
+
+            } else {
+                const sub = `${parseInt(data) - accountCash}`
+                fs.writeFile(`./Accounts/${accountName}.txt`, sub, (err, data) => {
+                    if (err) {
+                        console.log(chalk.bgRedBright('Erro ao Sacar conta'))
+                    }
+
+                    console.log(chalk.bgGreenBright(`Você sacou  R$${accountCash} e agora sua conta possui R$${sub}`))
+                    operation();
+                })
+            }
+        })
     })
 }
