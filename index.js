@@ -63,9 +63,9 @@ operation()
 const buildAccount = () => {
     inquirer.prompt([
         {
-            type: "input",
             name: 'accountName',
-            message: "Qual nome que você quer dar a sua Conta?"
+            message: "Qual nome que você quer dar a sua Conta?",
+            type: "input",
         }
     ]).then((res) => {
         const accountName = res.accountName
@@ -93,7 +93,6 @@ const buildAccount = () => {
         console.log(err)
     })
 }
-
 
 // Consulta de Saldo
 const consultBalance = () => {
@@ -148,10 +147,26 @@ const depositCash = () => {
             message: "Quanto você deseja depositar?",
             name: "accountCash",
             validate: validateNumber
-        }
+        },
+        {
+            message: "Confirmar(Y) - Cancelar(n)",
+            type: "confirm",
+            name: "cancelRequest"
+        },
     ]).then(res => {
+
         const accountName = res.accountName
         const accountCash = +res.accountCash
+        const cancelRequest = res.cancelRequest
+
+        if(!cancelRequest) {
+            console.log(chalk.bgBlue('Você encerrou sua sessão.'));
+            setTimeout(() => {
+                console.clear();
+                process.exit();
+            }, 1200)
+            return;
+        }
 
         if(!fs.existsSync(`./Accounts/${accountName}.txt`)) {
             console.log(chalk.bgRed('A conta não existe, por favor verifique o que foi digitado.'))
@@ -206,11 +221,26 @@ const withdraw = () => {
             message: "Quanto você deseja sacar?",
             type: "input",
             validate: validateNumber
+        },
+        {
+            message: "Confirmar(Y) - Cancelar(n)",
+            type: "confirm",
+            name: "cancelRequest"
         }
     ]).then(res => {
 
         const accountName = res.accountName
         const accountCash = parseInt(res.accountCash)
+        const cancelRequest = res.cancelRequest
+
+        if(!cancelRequest) {
+            console.log(chalk.bgBlue('Você encerrou sua sessão.'));
+            setTimeout(() => {
+                console.clear();
+                process.exit();
+            }, 1200)
+            return;
+        }
 
         if(!fs.existsSync(`./Accounts/${accountName}.txt`)) {
             console.log(chalk.bgRedBright.white('A conta não existe, por favor verifique o que foi digitado.'))
@@ -266,13 +296,27 @@ const transferCash = () => {
             type: "input",
             validate: validateNumber
         },
+        {
+            message: "Confirmar(Y) - Cancelar(n)",
+            type: "confirm",
+            name: "cancelRequest"
+        },
     ]).then(res => {
 
         const accountName = res.accountName
         const accountTransfer = res.accountTransfer
         const accountCash = res.accountCash
+        const cancelRequest = res.cancelRequest
 
-        // Vendo se a conta que quer transferir existe
+        if(!cancelRequest) {
+            console.log(chalk.bgBlue('Você encerrou sua sessão.'));
+            setTimeout(() => {
+                console.clear();
+                process.exit();
+            }, 1200)
+            return;
+        }
+
         if(!fs.existsSync(`./Accounts/${accountName}.txt`)) {
             console.log(chalk.bgRedBright.white('A conta não existe, por favor verifique o que foi digitado.'))
             transferCash();
@@ -286,7 +330,6 @@ const transferCash = () => {
             return;
         }
 
-        // lendo se a conta que quer transferir existe entao diminui o valor da conta que transferiu
         fs.readFile(`./Accounts/${accountName}.txt`, (err, data) => {
             if(data < accountCash) {
                 console.log(chalk.bgRedBright.white('O valor solicitado é maior que você possui na conta!'))
@@ -296,11 +339,12 @@ const transferCash = () => {
                 const sub = `${parseInt(data) - parseInt(accountCash)}`
                 fs.writeFile(`./Accounts/${accountName}.txt`, sub, (err) => {
                 })   
-                // lendo se a conta que quer transferir existe entao aumenta o valor da conta que recebeu transferência
+                
                 fs.readFile(`./Accounts/${accountTransfer}.txt`, (err, data) => {
                     const plus = `${(parseInt(data) + parseInt(accountCash))}`
                     fs.writeFile(`./Accounts/${accountTransfer}.txt`, plus, (err) => {
-                        console.log(`Transferencia no valor de R$${accountCash} realizada!`)
+                        console.log(chalk.greenBright(`Transferencia no valor de R$${accountCash} realizada!`))
+                        operation();
                     })    
                 })
             }           
@@ -324,10 +368,26 @@ const removeAccount = () => {
             name: "removeAccountUser",
             message: "Deseja remover conta?",
             type: "confirm"
-        }
+        },
+        {
+            message: "Confirmar(Y) - Cancelar(n)",
+            type: "confirm",
+            name: "cancelRequest"
+        },
     ]).then(res => {
         const accountName = res['accountName']
         const removeAccountUser = res['removeAccountUser']
+
+        const cancelRequest = res.cancelRequest
+
+        if(!cancelRequest) {
+            console.log(chalk.bgBlue('Você encerrou sua sessão.'));
+            setTimeout(() => {
+                console.clear();
+                process.exit();
+            }, 1200)
+            return;
+        }
 
         if(!fs.existsSync(`./Accounts/${accountName}.txt`)) {
             console.log(chalk.bgRed('A conta não existe, por favor verifique o que foi digitado.'))
@@ -348,8 +408,6 @@ const removeAccount = () => {
                 }
             })
 
-        } else {
         }
-
     })
 }
