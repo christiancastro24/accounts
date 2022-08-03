@@ -114,7 +114,7 @@ const consultBalance = () => {
         fs.readFile(`./Accounts/${accountName}.txt`, 'UTF-8', (err, data) => {
             const transformToNumber = +data
             if (data) {
-                console.log(chalk.bgGreenBright(`Sua conta possui R$${translateToNumber}`))
+                console.log(chalk.bgGreenBright(`Sua conta possui R$${transformToNumber}`))
                 operation();
             }
         })
