@@ -86,7 +86,7 @@ const buildAccount = () => {
             console.log(err)
         })
 
-        console.log(chalk.bgGreen.bold('Sucesso ao criar conta'))
+        console.log(chalk.bgGreen.bold('Sucesso ao criar conta, Você ganhou 10 reais de ínicio!'))
         operation();
         
     }).catch(err => {        
@@ -112,7 +112,7 @@ const consultBalance = () => {
         }
 
         fs.readFile(`./Accounts/${accountName}.txt`, 'UTF-8', (err, data) => {
-            const translateToNumber = +data
+            const transformToNumber = +data
             if (data) {
                 console.log(chalk.bgGreenBright(`Sua conta possui R$${translateToNumber}`))
                 operation();
@@ -339,7 +339,7 @@ const transferCash = () => {
                 const sub = `${parseInt(data) - parseInt(accountCash)}`
                 fs.writeFile(`./Accounts/${accountName}.txt`, sub, (err) => {
                 })   
-                
+
                 fs.readFile(`./Accounts/${accountTransfer}.txt`, (err, data) => {
                     const plus = `${(parseInt(data) + parseInt(accountCash))}`
                     fs.writeFile(`./Accounts/${accountTransfer}.txt`, plus, (err) => {
