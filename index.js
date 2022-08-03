@@ -19,6 +19,7 @@ const operation = () => {
                 'Depositar',
                 'Sacar',
                 'Transferencia',
+                'Remover Conta',
                 'Sair'
             ]
         }
@@ -42,6 +43,9 @@ const operation = () => {
 
         } else if(action === "Transferencia") {
             transferCash();          
+
+        } else if(action === "Remover Conta") {
+            removeAccount();          
 
         } else {
             console.log(chalk.bgBlue('Você encerrou sua sessão.'));
@@ -304,5 +308,48 @@ const transferCash = () => {
 
     }).catch(err => {
         console.log(err)
+    })
+}
+
+
+// Remover Conta
+const removeAccount = () => {
+    inquirer.prompt([
+        {
+            name: "accountName",
+            message: "Qual nome da sua conta?",
+            type: "input"
+        },
+        {
+            name: "removeAccountUser",
+            message: "Deseja remover conta?",
+            type: "confirm"
+        }
+    ]).then(res => {
+        const accountName = res['accountName']
+        const removeAccountUser = res['removeAccountUser']
+
+        if(!fs.existsSync(`./Accounts/${accountName}.txt`)) {
+            console.log(chalk.bgRed('A conta não existe, por favor verifique o que foi digitado.'))
+            removeAccount();
+            return;
+        }
+
+        if (removeAccountUser) {
+            fs.unlink(`./Accounts/${accountName}.txt`, (err) => {
+                if (err) {
+                    console.log(chalk.bgRed('Erro ao remover conta! Tente novamente'))
+                    removeAccount();
+                    return;
+
+                } else {
+                    console.log(chalk.bgBlueBright(`Sucesso ao remover conta!`))
+                    operation();             
+                }
+            })
+
+        } else {
+        }
+
     })
 }
