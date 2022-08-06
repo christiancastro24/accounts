@@ -28,7 +28,7 @@ const operation = () => {
         const action = res.action
         
         if (action === "Criar Conta") {
-            buildAccount();
+            createAccount();
 
         } else if(action === "Consultar Saldo") {
             consultBalance();
@@ -59,8 +59,18 @@ const operation = () => {
 
 operation()
 
+// Verifica se a conta existe
+const checkAccount = (accountName) => {
+    if(!fs.existsSync(`./Accounts/${accountName}.txt`)) {
+        console.log(chalk.bgRed('Esta conta não existe, escolha outro nome!'))
+        return false
+    }
+    return true
+}
+
+
 // Criar Conta
-const buildAccount = () => {
+const createAccount = () => {
     inquirer.prompt([
         {
             name: 'accountName',
@@ -76,18 +86,18 @@ const buildAccount = () => {
         } 
 
         if(fs.existsSync(`./Accounts/${accountName}.txt`)) {
-            console.log(chalk.bgRed('Esta conta já existe, escolha outro nome'))
-            operation();
+            console.log(chalk.bgRed('Esta conta já existe, escolha outro nome!'))
+            createAccount();
             return;
 
-        } 
-
-        fs.writeFileSync(`./Accounts/${accountName}.txt`, '10', (err) => {
-            console.log(err)
-        })
-
-        console.log(chalk.bgGreen.bold('Sucesso ao criar conta, Você ganhou 10 reais de ínicio!'))
-        operation();
+        } else {
+            fs.writeFileSync(`./Accounts/${accountName}.txt`, '10', (err) => {
+                console.log(err)
+            })
+            
+            console.log(chalk.bgGreen.bold('Sucesso ao criar conta, Você ganhou 10 reais de ínicio!'))
+            operation();
+        }
         
     }).catch(err => {        
         console.log(err)
@@ -106,9 +116,8 @@ const consultBalance = () => {
 
         const accountName = res.accountName
 
-        if(!fs.existsSync(`./Accounts/${accountName}.txt`)) {
-            console.log(chalk.bgRed('A conta não existe, por favor verifique o que foi digitado.'))
-            consultBalance();
+        if(!checkAccount(accountName)) {
+            return consultBalance();
         }
 
         fs.readFile(`./Accounts/${accountName}.txt`, 'UTF-8', (err, data) => {
@@ -168,31 +177,28 @@ const depositCash = () => {
             return;
         }
 
-        if(!fs.existsSync(`./Accounts/${accountName}.txt`)) {
-            console.log(chalk.bgRed('A conta não existe, por favor verifique o que foi digitado.'))
-            depositCash();
-            return;
+        if(!checkAccount(accountName)) {
+            return depositCash();       
         }
 
         fs.readFile(`./Accounts/${accountName}.txt`, 'utf-8', (err, data) => {
             if (err) {
                 console.log(`${err} Erro!! `)
                 depositCash();
+
+            } else {
+                const soma = `${accountCash + +data}`
+                fs.writeFile(`./Accounts/${accountName}.txt`, soma, (err) => {
+                    if (err) {
+                        console.log(chalk.bgRed(`Erro ao depositar`))
+                        depositCash();
+                        
+                    }
+                    console.log(chalk.bgGreenBright(`Você depositou R$${accountCash}!`))
+                    operation();
+                    
+                })
             }
-
-            const soma = `${accountCash + +data}`
-            fs.writeFile(`./Accounts/${accountName}.txt`, soma, (err) => {
-                if (err) {
-                    console.log(chalk.bgRed(`Erro ao depositar`))
-                    depositCash();
-
-                }
-                console.log(chalk.bgGreenBright(`Você depositou R$${accountCash}!`))
-                operation();
-
-            })
-
-
         })
     }).catch(err => {
         console.log(err)
@@ -204,7 +210,7 @@ const depositCash = () => {
 const withdraw = () => {
 
     const validateNumber = async (input) => {
-        if (!Number(input)) {
+        if (!Number(input) || !input) {
             return 'O valor deve ser número'
         }
         return true
@@ -242,13 +248,11 @@ const withdraw = () => {
             return;
         }
 
-        if(!fs.existsSync(`./Accounts/${accountName}.txt`)) {
-            console.log(chalk.bgRedBright.white('A conta não existe, por favor verifique o que foi digitado.'))
-            withdraw();
-            return;
-        }
+        if(!checkAccount(accountName)) {
+            return withdraw();   
 
-        fs.readFile(`./Accounts/${accountName}.txt`, 'utf-8', (err, data) => {
+        } else {
+            fs.readFile(`./Accounts/${accountName}.txt`, 'utf-8', (err, data) => {
 
             if(data < accountCash) {
                 console.log(chalk.bgRedBright('O valor solicitado é maior que você possui na conta!'))
@@ -259,13 +263,15 @@ const withdraw = () => {
                 fs.writeFile(`./Accounts/${accountName}.txt`, sub, (err) => {
                     if (err) {
                         console.log(chalk.bgRedBright('Erro ao Sacar conta'))
-                    }
 
-                    console.log(chalk.bgGreenBright(`Você sacou  R$${accountCash} e agora sua conta possui R$${sub}`))
-                    operation();
+                    } else {   
+                        console.log(chalk.bgGreenBright(`Você sacou  R$${accountCash} e agora sua conta possui R$${sub}`))
+                        operation();
+                    }
                 })
             }
         })
+    }
     }).catch(err => {
         console.log(err)
     })
@@ -317,10 +323,8 @@ const transferCash = () => {
             return;
         }
 
-        if(!fs.existsSync(`./Accounts/${accountName}.txt`)) {
-            console.log(chalk.bgRedBright.white('A conta não existe, por favor verifique o que foi digitado.'))
-            transferCash();
-            return;
+        if(!checkAccount(accountName)) {
+            return transferCash();
         }
 
         // Vendo se a conta que quer receber transferência existe
@@ -336,11 +340,13 @@ const transferCash = () => {
                 transferCash();
                 return;
             } else {   
+                // Vai diminuir o valor da conta que mandou (valor na conta - valor digitado no input)
                 const sub = `${parseInt(data) - parseInt(accountCash)}`
                 fs.writeFile(`./Accounts/${accountName}.txt`, sub, (err) => {
                 })   
 
                 fs.readFile(`./Accounts/${accountTransfer}.txt`, (err, data) => {
+                // Vai aumentar o valor da conta que recebeu (pegando o valor que tem lá (data -> valor na conta) + o valor digitado no input)
                     const plus = `${(parseInt(data) + parseInt(accountCash))}`
                     fs.writeFile(`./Accounts/${accountTransfer}.txt`, plus, (err) => {
                         console.log(chalk.greenBright(`Transferencia no valor de R$${accountCash} realizada!`))
@@ -389,10 +395,8 @@ const removeAccount = () => {
             return;
         }
 
-        if(!fs.existsSync(`./Accounts/${accountName}.txt`)) {
-            console.log(chalk.bgRed('A conta não existe, por favor verifique o que foi digitado.'))
-            removeAccount();
-            return;
+        if(!checkAccount(accountName)) {
+            return removeAccount();        
         }
 
         if (removeAccountUser) {
