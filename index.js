@@ -4,6 +4,7 @@ import inquirer from 'inquirer';
 
 // modulos internos
 import fs from 'fs';
+import { clear } from "console";
 
 
 // Operation
@@ -68,6 +69,16 @@ const checkAccount = (accountName) => {
     return true
 }
 
+// Pega o valor da conta
+const accountData = (accountName) => {
+    fs.readFile(`./Accounts/${accountName}.txt`, 'UTF-8', (err, data) => {
+        if (data) {
+            console.log(chalk.bgGreen(`Sua conta possui R$${data}`))
+            operation();
+        }
+    })
+}
+
 
 // Criar Conta
 const createAccount = () => {
@@ -120,13 +131,7 @@ const consultBalance = () => {
             return consultBalance();
         }
 
-        fs.readFile(`./Accounts/${accountName}.txt`, 'UTF-8', (err, data) => {
-            const transformToNumber = +data
-            if (data) {
-                console.log(chalk.bgGreenBright(`Sua conta possui R$${transformToNumber}`))
-                operation();
-            }
-        })
+        accountData(accountName);
 
 
     }).catch(err => {
@@ -236,7 +241,7 @@ const withdraw = () => {
     ]).then(res => {
 
         const accountName = res.accountName
-        const accountCash = parseInt(res.accountCash)
+        const accountCash = res.accountCash
         const cancelRequest = res.cancelRequest
 
         if(!cancelRequest) {
@@ -259,7 +264,7 @@ const withdraw = () => {
                 withdraw();
 
             } else {
-                const sub = `${parseInt(data) - accountCash}`
+                const sub = `${parseInt(data) - parseInt(accountCash)}`
                 fs.writeFile(`./Accounts/${accountName}.txt`, sub, (err) => {
                     if (err) {
                         console.log(chalk.bgRedBright('Erro ao Sacar conta'))
